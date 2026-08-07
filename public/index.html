@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="이름, 이메일, 비밀번호로 간편하게 가입하세요." />
+    <title>회원가입</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@500;600;700&family=Noto+Sans+KR:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="page-shell">
+      <section class="brand-panel" aria-label="서비스 소개">
+        <a class="brand" href="#" aria-label="Moa 홈">
+          <span class="brand-mark" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </span>
+          <span>moa</span>
+        </a>
+
+        <div class="brand-copy">
+          <p class="eyebrow">WELCOME TO MOA</p>
+          <h1>좋아하는 모든 것을<br />한곳에 모아보세요.</h1>
+          <p>간단한 가입으로 나만의 공간을 시작할 수 있어요.</p>
+        </div>
+
+        <div class="decor decor-large" aria-hidden="true"></div>
+        <div class="decor decor-small" aria-hidden="true"></div>
+        <p class="brand-footer">당신의 취향이 머무는 곳</p>
+      </section>
+
+      <section class="form-panel">
+        <div class="form-wrap">
+          <header class="form-header">
+            <p class="step">새로운 시작</p>
+            <h2>회원가입</h2>
+            <p>아래 정보를 입력하고 계정을 만들어보세요.</p>
+          </header>
+
+          <form id="signup-form" novalidate>
+            <div class="field" id="name-field">
+              <label for="name">이름</label>
+              <div class="input-wrap">
+                <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M20 21a8 8 0 0 0-16 0M12 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z" /></svg>
+                <input id="name" name="name" type="text" placeholder="이름을 입력해주세요" autocomplete="name" aria-describedby="name-error" />
+              </div>
+              <p class="error" id="name-error" aria-live="polite"></p>
+            </div>
+
+            <div class="field" id="email-field">
+              <label for="email">이메일</label>
+              <div class="input-wrap">
+                <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" /><path d="m22 7-10 7L2 7" /></svg>
+                <input id="email" name="email" type="email" placeholder="example@email.com" autocomplete="email" inputmode="email" aria-describedby="email-error" />
+              </div>
+              <p class="error" id="email-error" aria-live="polite"></p>
+            </div>
+
+            <div class="field" id="password-field">
+              <label for="password">비밀번호</label>
+              <div class="input-wrap">
+                <svg aria-hidden="true" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg>
+                <input id="password" name="password" type="password" placeholder="비밀번호를 입력해주세요" autocomplete="new-password" aria-describedby="password-hint password-error" />
+                <button class="visibility-toggle" type="button" aria-label="비밀번호 보기" aria-pressed="false">
+                  <svg class="eye-open" aria-hidden="true" viewBox="0 0 24 24"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z" /><circle cx="12" cy="12" r="2.5" /></svg>
+                  <svg class="eye-closed" aria-hidden="true" viewBox="0 0 24 24"><path d="m3 3 18 18M10.6 6.2A11 11 0 0 1 12 6c6.5 0 10 6 10 6a16 16 0 0 1-2.2 3M6.6 6.6C3.6 8.4 2 12 2 12s3.5 6 10 6c1 0 2-.2 2.8-.5" /></svg>
+                </button>
+              </div>
+              <div class="requirements" id="password-hint">
+                <span data-rule="length"><i>✓</i> 10자 이상</span>
+                <span data-rule="letter"><i>✓</i> 영문 포함</span>
+                <span data-rule="number"><i>✓</i> 숫자 포함</span>
+              </div>
+              <p class="error" id="password-error" aria-live="polite"></p>
+            </div>
+
+            <button class="submit-button" type="submit">
+              <span>가입하기</span>
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6" /></svg>
+            </button>
+
+            <p class="form-status" id="form-status" role="alert" aria-live="polite"></p>
+
+            <p class="login-link">이미 계정이 있으신가요? <a href="#">로그인</a></p>
+          </form>
+
+          <div class="success-card" id="success-card" role="status" aria-live="polite" hidden>
+            <div class="success-icon" aria-hidden="true">✓</div>
+            <h2>가입이 완료되었어요!</h2>
+            <p><strong id="member-name"></strong>님, moa에 오신 것을 환영합니다.</p>
+            <button type="button" id="reset-button">다른 계정으로 가입하기</button>
+          </div>
+        </div>
+      </section>
+    </main>
+    <script src="script.js?v=2"></script>
+  </body>
+</html>

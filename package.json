@@ -1,0 +1,19 @@
+{
+  "name": "moa-member-signup",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev --port 4173",
+    "db:migrate:local": "wrangler d1 migrations apply member-project --local",
+    "db:migrate:remote": "wrangler d1 migrations apply member-project --remote",
+    "deploy": "wrangler deploy",
+    "check": "wrangler deploy --dry-run"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  },
+  "allowScripts": {
+    "esbuild@0.28.1": true,
+    "workerd@1.20260801.1": true
+  }
+}
