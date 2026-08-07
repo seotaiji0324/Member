@@ -14,6 +14,12 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <nav class="account-nav" aria-label="계정 메뉴">
+      <span class="account-name" id="account-name" hidden></span>
+      <a class="account-link admin-menu-link" id="admin-menu-link" href="admin.html" hidden>관리자 조회</a>
+      <button class="account-link" id="login-open-button" type="button">로그인</button>
+      <button class="account-link account-link-muted" id="logout-button" type="button" hidden>로그아웃</button>
+    </nav>
     <main class="page-shell">
       <section class="brand-panel" aria-label="서비스 소개">
         <a class="brand" href="#" aria-label="Moa 홈">
@@ -86,7 +92,7 @@
 
             <p class="form-status" id="form-status" role="alert" aria-live="polite"></p>
 
-            <p class="login-link">이미 계정이 있으신가요? <a href="#">로그인</a></p>
+            <p class="login-link">이미 계정이 있으신가요? <a id="login-link" href="#login-dialog">로그인</a></p>
           </form>
 
           <div class="success-card" id="success-card" role="status" aria-live="polite" hidden>
@@ -98,6 +104,30 @@
         </div>
       </section>
     </main>
-    <script src="script.js?v=3"></script>
+
+    <dialog class="login-dialog" id="login-dialog" aria-labelledby="login-title">
+      <div class="dialog-heading">
+        <div>
+          <p class="step">MEMBER LOGIN</p>
+          <h2 id="login-title">로그인</h2>
+        </div>
+        <button class="dialog-close" id="login-close-button" type="button" aria-label="로그인 창 닫기">×</button>
+      </div>
+      <p class="dialog-description">가입한 이메일과 비밀번호를 입력해주세요.</p>
+      <form id="login-form" novalidate>
+        <div class="field">
+          <label for="login-email">이메일</label>
+          <input id="login-email" name="email" type="email" value="seook12@naver.com" autocomplete="username" required />
+        </div>
+        <div class="field">
+          <label for="login-password">비밀번호</label>
+          <input id="login-password" name="password" type="password" autocomplete="current-password" required />
+        </div>
+        <p class="form-status" id="login-status" role="alert" aria-live="polite"></p>
+        <button class="submit-button dialog-submit" type="submit"><span>로그인</span></button>
+      </form>
+    </dialog>
+
+    <script src="script.js?v=4"></script>
   </body>
 </html>

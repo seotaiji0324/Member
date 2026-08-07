@@ -7,6 +7,15 @@ const visibilityToggle = document.querySelector(".visibility-toggle");
 const resetButton = document.querySelector("#reset-button");
 const submitButton = form.querySelector(".submit-button");
 const formStatus = document.querySelector("#form-status");
+const loginDialog = document.querySelector("#login-dialog");
+const loginForm = document.querySelector("#login-form");
+const loginStatus = document.querySelector("#login-status");
+const loginOpenButton = document.querySelector("#login-open-button");
+const loginCloseButton = document.querySelector("#login-close-button");
+const loginLink = document.querySelector("#login-link");
+const logoutButton = document.querySelector("#logout-button");
+const adminMenuLink = document.querySelector("#admin-menu-link");
+const accountName = document.querySelector("#account-name");
 
 const passwordRules = {
   length: (value) => value.length >= 10,
@@ -15,9 +24,14 @@ const passwordRules = {
 };
 
 const PBKDF2_ITERATIONS = 210_000;
-const SIGNUP_API_URL = window.location.hostname === "seotaiji0324.github.io"
-  ? "https://moa-member-signup.seotaiji0324.workers.dev/api/signup"
-  : "/api/signup";
+const API_BASE_URL = window.location.hostname === "seotaiji0324.github.io"
+  ? "https://moa-member-signup.seotaiji0324.workers.dev"
+  : "";
+const SESSION_TOKEN_KEY = "moa_session_token";
+
+function apiUrl(path) {
+  return `${API_BASE_URL}${path}`;
+}
 
 function bytesToBase64(bytes) {
   let binary = "";
@@ -25,8 +39,13 @@ function bytesToBase64(bytes) {
   return btoa(binary);
 }
 
-async function derivePasswordProof(password) {
-  const salt = crypto.getRandomValues(new Uint8Array(16));
+function base64ToBytes(value) {
+  const binary = atob(value);
+  return Uint8Array.from(binary, (character) => character.charCodeAt(0));
+}
+
+async function derivePasswordProof(password, encodedSalt = "") {
+  const salt = encodedSalt ? base64ToBytes(encodedSalt) : crypto.getRandomValues(new Uint8Array(16));
   const keyMaterial = await crypto.subtle.importKey(
     "raw",
     new TextEncoder().encode(password),
@@ -41,7 +60,7 @@ async function derivePasswordProof(password) {
   );
   return {
     passwordProof: bytesToBase64(new Uint8Array(bits)),
-    passwordSalt: bytesToBase64(salt),
+    passwordSalt: encodedSalt || bytesToBase64(salt),
   };
 }
 
@@ -125,7 +144,7 @@ form.addEventListener("submit", async (event) => {
 
   try {
     const passwordData = await derivePasswordProof(passwordInput.value);
-    const response = await fetch(SIGNUP_API_URL, {
+    const response = await fetch(apiUrl("/api/signup"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -170,3 +189,115 @@ resetButton.addEventListener("click", () => {
   form.hidden = false;
   nameInput.focus();
 });
+
+function renderSession(user) {
+  const loggedIn = Boolean(user);
+  accountName.hidden = !loggedIn;
+  accountName.textContent = user ? `${user.name}님` : "";
+  loginOpenButton.hidden = loggedIn;
+  logoutButton.hidden = !loggedIn;
+  adminMenuLink.hidden = user?.role !== "admin";
+}
+
+function openLoginDialog(event) {
+  event?.preventDefault();
+  loginStatus.textContent = "";
+  loginDialog.showModal();
+  document.querySelector("#login-email").focus();
+}
+
+loginOpenButton.addEventListener("click", openLoginDialog);
+loginLink.addEventListener("click", openLoginDialog);
+loginCloseButton.addEventListener("click", () => loginDialog.close());
+
+loginDialog.addEventListener("click", (event) => {
+  if (event.target === loginDialog) loginDialog.close();
+});
+
+loginForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  loginStatus.textContent = "";
+  const email = document.querySelector("#login-email").value.trim();
+  const password = document.querySelector("#login-password").value;
+  const button = loginForm.querySelector("button[type='submit']");
+
+  if (!email || !password) {
+    loginStatus.textContent = "이메일과 비밀번호를 입력해주세요.";
+    return;
+  }
+
+  button.disabled = true;
+  button.querySelector("span").textContent = "확인 중";
+
+  try {
+    const challengeResponse = await fetch(apiUrl("/api/login/challenge"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    const challenge = await challengeResponse.json().catch(() => ({}));
+    if (!challengeResponse.ok || !challenge.passwordSalt) throw new Error(challenge.message || "로그인 준비에 실패했습니다.");
+
+    const { passwordProof } = await derivePasswordProof(password, challenge.passwordSalt);
+    const response = await fetch(apiUrl("/api/login"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, passwordProof }),
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(result.message || "로그인하지 못했습니다.");
+
+    sessionStorage.setItem(SESSION_TOKEN_KEY, result.token);
+    renderSession(result.user);
+    loginForm.reset();
+    document.querySelector("#login-email").value = result.user.email;
+    loginDialog.close();
+  } catch (error) {
+    loginStatus.textContent = error.message || "로그인 중 문제가 발생했습니다.";
+  } finally {
+    button.disabled = false;
+    button.querySelector("span").textContent = "로그인";
+  }
+});
+
+logoutButton.addEventListener("click", async () => {
+  const token = sessionStorage.getItem(SESSION_TOKEN_KEY);
+  sessionStorage.removeItem(SESSION_TOKEN_KEY);
+  renderSession(null);
+  if (!token) return;
+
+  try {
+    await fetch(apiUrl("/api/logout"), {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  } catch {
+    // 로컬 세션은 이미 제거되었으므로 별도 처리가 필요하지 않습니다.
+  }
+});
+
+async function restoreSession() {
+  const token = sessionStorage.getItem(SESSION_TOKEN_KEY);
+  if (!token) {
+    renderSession(null);
+    return;
+  }
+
+  try {
+    const response = await fetch(apiUrl("/api/session"), {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error("session expired");
+    renderSession(result.user);
+  } catch {
+    sessionStorage.removeItem(SESSION_TOKEN_KEY);
+    renderSession(null);
+  }
+}
+
+restoreSession().catch(() => renderSession(null));
+
+if (new URLSearchParams(window.location.search).get("login") === "required") {
+  openLoginDialog();
+}
