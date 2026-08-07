@@ -5,6 +5,41 @@ const JSON_HEADERS = {
 
 const PBKDF2_ITERATIONS = 210_000;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const GITHUB_PAGES_ORIGIN = "https://seotaiji0324.github.io";
+
+function allowedCorsOrigin(request) {
+  const origin = request.headers.get("Origin");
+  if (!origin) return "";
+
+  const requestOrigin = new URL(request.url).origin;
+  return origin === requestOrigin || origin === GITHUB_PAGES_ORIGIN ? origin : null;
+}
+
+function withCors(response, origin) {
+  if (!origin) return response;
+
+  const headers = new Headers(response.headers);
+  headers.set("Access-Control-Allow-Origin", origin);
+  headers.append("Vary", "Origin");
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
+function corsPreflight(origin) {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      "Access-Control-Allow-Origin": origin,
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+      "Access-Control-Max-Age": "86400",
+      Vary: "Origin",
+    },
+  });
+}
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), { status, headers: JSON_HEADERS });
@@ -94,10 +129,19 @@ export default {
     const url = new URL(request.url);
 
     if (url.pathname === "/api/signup") {
-      if (request.method !== "POST") {
-        return new Response(null, { status: 405, headers: { Allow: "POST" } });
+      const requestOrigin = request.headers.get("Origin");
+      const corsOrigin = allowedCorsOrigin(request);
+
+      if (requestOrigin && !corsOrigin) {
+        return json({ message: "허용되지 않은 요청 출처입니다." }, 403);
       }
-      return createUser(request, env);
+      if (request.method === "OPTIONS") {
+        return corsPreflight(corsOrigin);
+      }
+      if (request.method !== "POST") {
+        return withCors(new Response(null, { status: 405, headers: { Allow: "POST" } }), corsOrigin);
+      }
+      return withCors(await createUser(request, env), corsOrigin);
     }
 
     return env.ASSETS.fetch(request);

@@ -15,6 +15,9 @@ const passwordRules = {
 };
 
 const PBKDF2_ITERATIONS = 210_000;
+const SIGNUP_API_URL = window.location.hostname === "seotaiji0324.github.io"
+  ? "https://moa-member-signup.seotaiji0324.workers.dev/api/signup"
+  : "/api/signup";
 
 function bytesToBase64(bytes) {
   let binary = "";
@@ -122,7 +125,7 @@ form.addEventListener("submit", async (event) => {
 
   try {
     const passwordData = await derivePasswordProof(passwordInput.value);
-    const response = await fetch("/api/signup", {
+    const response = await fetch(SIGNUP_API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
